@@ -1,21 +1,17 @@
+//Definition & imports
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 
 // Middlewares
+require("dotenv").config();
 app.use(cors());
 app.use(express.json());
 
-// Basic routes
-app.get("/", (req, res) => {
-  res.json({ status: "ok", message: "Hero Apps Server" });
-});
-
-const uri =
-  "mongodb+srv://hero-apps:DQj74uciUGmFMxo0@cluster0.zh14pzm.mongodb.net/?appName=Cluster0";
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+//ports & clients
+const port = process.env.PORT || 5000;
+const uri = `mongodb+srv://${process.env.DBUSER}:${process.env.DBPASS}@mern-cluster.voqlfwt.mongodb.net/?appName=mern-cluster`;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -24,38 +20,36 @@ const client = new MongoClient(uri, {
   },
 });
 
+//server-Main
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-
     const database = client.db("heroAppsDB");
-    const appsCollection = database.collection("appsCl");
+    const appsCollection = database.collection("apps");
 
     app.get("/apps", async (req, res) => {
       try {
-        const apps = await appsCollection.find({}).toArray();
-
-        res.json(apps);
+        const apps = await appsCollection.find().toArray();
+        res.send(apps);
       } catch (error) {
+        console.log(error);
         res.status(500).json({ error: "Internal Server Error" });
       }
-    } );
-    
-    
-     app.get("/appsCount", async (req, res) => {
-       const count = await appsCollection.estimatedDocumentCount();
-       res.send({ count });
-     });
+    });
 
     app.get("/app/:id", async (req, res) => {
       try {
         const appId = req.params.id;
-        console.log(appId);
+        if (id.length != 24) {
+          res.status(400).json({ error: "Invalid ID" });
+
+          return;
+        }
         const query = new ObjectId(appId);
         const app = await appsCollection.findOne({ _id: query });
         res.json(app);
       } catch (error) {
+        console.log(error);
         res.status(500).json({ error: "Internal Server Error" });
       }
     });
@@ -80,4 +74,9 @@ const PORT = process.env.PORT || 3000;
 
 const server = app.listen(PORT, () => {
   console.log(`Hero Apps Server listening on port ${PORT}`);
+});
+
+// Basic routes
+app.get("/", (req, res) => {
+  res.json({ status: "ok", message: "Hero Apps Server" });
 });
